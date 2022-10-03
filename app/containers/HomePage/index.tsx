@@ -12,8 +12,15 @@
 import * as React from 'react';
 import { FormattedMessage } from 'react-intl';
 import messages from './messages';
+import ConfirmationDialog from '../../dialogs/confirmationDialog/ConfirmationDialog';
 
-const studentList = [
+const [isConfirmationDialogVisible, setIsConfirmationDialogVisible] = React.useState(false);
+const [confirmationMessage, setConfirmationMessage] = React.useState('Are You sure?');
+const [confirmationMethodToExecute, setConfirmationMethodToExecute] = React.useState(()=>{});
+const [selectedStudent, setSelectedStudent] = React.useState({});
+const [isAddingNewStudent, setIsAddingNewStudent] = React.useState(false);
+const [newStudent, setNewStudent] = React.useState({});
+const [studentList, setStudentList] = React.useState([
   {
     firstName: 'Optimus',
     lastName: 'Prime',
@@ -42,7 +49,7 @@ const studentList = [
     age: 45,
     grade: '10th'
   }
-];
+]);
 
 const editStudent = (student) => {
   //do edit stuff
@@ -50,8 +57,58 @@ const editStudent = (student) => {
 }
 
 const deleteStudent = (student) => {
-  //do delete stuff
-  console.log('delete', student);
+  //Filters student list by email to remove the selected students email
+  let filteredStudentList = studentList.filter(x => x.email !== student.email );
+  setStudentList(filteredStudentList);
+  closeConfirmationDialog();
+}
+
+const addStudent = () => {
+  let tempStudentList = {...studentList};
+  tempStudentList.push(newStudent);
+  setStudentList(tempStudentList);
+  setNewStudent({});
+  setIsAddingNewStudent(false);
+}
+
+const closeConfirmationDialog = () => {
+  setIsConfirmationDialogVisible(false);
+}
+
+const openConfirmationDialog = (student) => {
+  setSelectedStudent(student);
+  setConfirmationMessage(`Are you sure you would like to delete the student record for ${student.firstName} ${student.lastName}?`)
+  setIsConfirmationDialogVisible(true);
+}
+
+const handlenewStudentFirstNameChange = (name) => {
+  let tempNewStudent = {...newStudent};
+  tempNewStudent.firstName = name;
+  setNewStudent(tempNewStudent);
+}
+
+const handlenewStudentLastNameChange = (name) => {
+  let tempNewStudent = {...newStudent};
+  tempNewStudent.lastName = name;
+  setNewStudent(tempNewStudent);
+}
+
+const handlenewStudentEmailChange = (email) => {
+  let tempNewStudent = {...newStudent};
+  tempNewStudent.email = email;
+  setNewStudent(tempNewStudent);
+}
+
+const handlenewStudentAgeChange = (age) => {
+  let tempNewStudent = {...newStudent};
+  tempNewStudent.age = age;
+  setNewStudent(tempNewStudent);
+}
+
+const handlenewStudentGradeChange = (grade) => {
+  let tempNewStudent = {...newStudent};
+  tempNewStudent.grade = grade;
+  setNewStudent(tempNewStudent);
 }
 
 const renderList = () => {
@@ -65,8 +122,44 @@ const renderList = () => {
         <td>{student.grade}</td>
         <td>
           <button onClick={() => editStudent(student)}>Edit</button>
-          <button onClick={() => deleteStudent(student)}>Delete</button>
+          <button onClick={() => openConfirmationDialog(student)}>Delete</button>
         </td>
+        {isAddingNewStudent && (<tr>
+          <form onSubmit={addStudent}>
+            <td>
+              <label>
+                First Name:
+                <input type="text" value={newStudent.name} onchange={(event) => handlenewStudentFirstNameChange(event.target.value)}></input>
+              </label>
+            </td>
+            <td>
+              <label>
+                Last Name:
+                <input type="text" value={newStudent.name} onchange={(event) => handlenewStudentLastNameChange(event.target.value)}></input>
+              </label>
+            </td>
+            <td>
+              <label>
+                Email:
+                <input type="text" value={newStudent.name} onchange={(event) => handlenewStudentEmailChange(event.target.value)}></input>
+              </label>
+            </td>
+            <td>
+              <label>
+                Age:
+                <input type="text" value={newStudent.name} onchange={(event) => handlenewStudentAgeChange(event.target.value)}></input>
+              </label>
+            </td>
+            <td>
+              <label>
+                Grade:
+                <input type="text" value={newStudent.name} onchange={(event) => handlenewStudentGradeChange(event.target.value)}></input>
+              </label>
+              <input type="submit" value="Submit" />
+            </td>
+          </form>
+          <button onClick={() => {setIsAddingNewStudent(false); setNewStudent({});}}>Cancel</button>
+        </tr>)}
       </tr>
     )
   })
@@ -75,10 +168,18 @@ const renderList = () => {
 export default function HomePage() {
   return (
     <>
+        <ConfirmationDialog
+          visible={isConfirmationDialogVisible}
+          hideDialog={closeConfirmationDialog}
+          confirmationMessage={confirmationMessage}
+          methodToExecute={deleteStudent}
+          variable={selectedStudent}
+        />
       <h1>
         <FormattedMessage {...messages.header} />
       </h1>
       <div>
+        <button onClick={() => setIsAddingNewStudent(true)}>Add New Student</button>
         <table>
           <tr>
             <th>Last Name</th>
